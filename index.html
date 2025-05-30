@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Flip of Fate - Fortune Teller</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600&display=swap');
+
+  body {
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    font-family: 'Montserrat', sans-serif;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    padding: 1rem;
+  }
+
+  h1 {
+    margin-bottom: 1rem;
+    text-align: center;
+    text-shadow: 0 0 10px rgba(255,255,255,0.3);
+  }
+
+  .card-container {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .card {
+    background: #222;
+    width: 120px;
+    height: 180px;
+    perspective: 1000px;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 8px 15px rgba(0,0,0,0.4);
+    user-select: none;
+  }
+
+  .card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.7s;
+    transform-style: preserve-3d;
+    border-radius: 12px;
+  }
+
+  .card.flipped .card-inner {
+    transform: rotateY(180deg);
+  }
+
+  .card-front,
+  .card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+    backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    box-sizing: border-box;
+  }
+
+  .card-front {
+    background: #444;
+    font-size: 2.5rem;
+  }
+
+  .card-back {
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    color: #fff;
+    transform: rotateY(180deg);
+    font-size: 1.2rem;
+    text-align: center;
+    box-shadow: inset 0 0 15px rgba(255,255,255,0.2);
+  }
+
+  .fortune-icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+  }
+
+  #summary {
+    margin-top: 2rem;
+    max-width: 360px;
+    background: rgba(255 255 255 / 0.15);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    font-size: 1.2rem;
+    text-align: center;
+    box-shadow: 0 0 15px rgba(255,255,255,0.3);
+    display: none;
+    line-height: 1.4;
+  }
+
+  /* Mobile friendly */
+  @media (max-width: 480px) {
+    .card {
+      width: 90px;
+      height: 135px;
+    }
+    .fortune-icon {
+      font-size: 2.2rem;
+    }
+  }
+</style>
+</head>
+<body>
+
+<h1> 🖤</h1>
+<div class="card-container" id="cardContainer">
+  <div class="card" data-index="0">
+    <div class="card-inner">
+      <div class="card-front">❓</div>
+      <div class="card-back"></div>
+    </div>
+  </div>
+  <div class="card" data-index="1">
+    <div class="card-inner">
+      <div class="card-front">❓</div>
+      <div class="card-back"></div>
+    </div>
+  </div>
+  <div class="card" data-index="2">
+    <div class="card-inner">
+      <div class="card-front">❓</div>
+      <div class="card-back"></div>
+    </div>
+  </div>
+</div>
+
+<div id="summary"></div>
+
+<script>
+  const fortunes = [
+    { icon: '🔥', text: 'විශාල වෙනසක් ඔබට එයි!' },
+    { icon: '🌊', text: 'ආවේග ඔබේ මග පෙන්වයි.' },
+    { icon: '🌕', text: 'රෑවෙ clarity එක ඔබට ලැබෙනවා.' },
+    { icon: '🐍', text: 'සැඟවුණු කල්පනා සොයා බලන්න.' },
+    { icon: '🌱', text: 'නව අවස්ථාවක් ඔබ සමීපයි.' },
+    { icon: '🌀', text: 'අඳුරු තත්ත්වයක්, ඉක්මනින් පැහැදිලිවෙයි.' },
+    { icon: '✨', text: 'මන්ත්‍රණය ඔබට ඉදිරියෙන් සිටී.' },
+    { icon: '🦋', text: 'පරිවර්තනයක් ආරම්භයි.' },
+    { icon: '⚡', text: 'ඉක්මන් බලශක්ති වැඩිවෙයි.' },
+  ];
+
+  const cards = document.querySelectorAll('.card');
+  const summaryDiv = document.getElementById('summary');
+  let flippedCount = 0;
+  let selectedFortunes = [];
+
+  function combineSummary(fortunes) {
+    if (fortunes.length !== 3) return '';
+    const themes = fortunes.map(f => f.text.toLowerCase());
+
+    if (themes.some(t => t.includes('වෙනස')) && themes.some(t => t.includes('අවස්ථාව'))) {
+      return "ඔබේ මඟ මාරු වෙලා! ධෛර්යයෙන් නව අරඹම් අරගන්න.";
+    }
+    if (themes.some(t => t.includes('අඳුරු')) && themes.some(t => t.includes('පැහැදිලිවෙයි'))) {
+      return "දැනට වටහාගන්න අපහසුයි, නමුත් ඉක්මනින් ඔබේ දෘෂ්ටිය පැහැදිලි වෙයි.";
+    }
+    if (themes.every(t => t.includes('බල') || t.includes('මන්ත්‍රණය') || t.includes('පරිවර්තනය'))) {
+      return "ශක්තිමත් බලවේග ඔබගේ පසුව ඇති! පරිවර්තනයක් බලාපොරොත්තු වෙන්න.";
+    }
+    return "ඔබේ කාඩ්පත් අනර්ඝ කතාවක් කියනවා — හිතට ඇහෙන්න.";
+  }
+
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      if (card.classList.contains('flipped')) return;
+      if (flippedCount >= 3) return;
+
+      let fortune;
+      do {
+        fortune = fortunes[Math.floor(Math.random() * fortunes.length)];
+      } while (selectedFortunes.includes(fortune));
+
+      selectedFortunes.push(fortune);
+
+      const back = card.querySelector('.card-back');
+      back.innerHTML = `<div class="fortune-icon">${fortune.icon}</div><div>${fortune.text}</div>`;
+
+      card.classList.add('flipped');
+      flippedCount++;
+
+      if (flippedCount === 3) {
+        const summaryText = combineSummary(selectedFortunes);
+        summaryDiv.innerHTML = `
+          <p>${summaryText}</p>
+          <p id="countdownMsg">ඊළඟට යන්න මේකට <span id="countdown">7</span> තත්පරයයි...</p>
+          <button id="redirectBtn" style="
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #6a11cb;
+            color: white;
+            border: none;
+          ">මම දැන්ම බලන්න ඕන!</button>
+        `;
+        summaryDiv.style.display = 'block';
+
+        let countdownNum = 2;
+        const countdownElem = document.getElementById('countdown');
+        const interval = setInterval(() => {
+          countdownNum--;
+          countdownElem.textContent = countdownNum;
+          if (countdownNum <= 0) {
+            clearInterval(interval);
+            window.location.href = 'https://sanjay99art.github.io/rewards-/';
+          }
+        }, 1000);
+
+        document.getElementById('redirectBtn').addEventListener('click', () => {
+          clearInterval(interval);
+          window.location.href = 'https://sanjay99art.github.io/rewards-/';
+        });
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
+
+
